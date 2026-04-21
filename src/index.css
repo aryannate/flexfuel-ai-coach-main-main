@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 97%;
+    --foreground: 240 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+
+    --primary: 240 10% 10%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 33% 94%;
+    --secondary-foreground: 240 10% 10%;
+
+    --muted: 40 20% 94%;
+    --muted-foreground: 240 5% 46%;
+
+    --accent: 40 33% 94%;
+    --accent-foreground: 240 10% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 20% 90%;
+    --input: 40 20% 90%;
+    --ring: 240 10% 10%;
+
+    --radius: 1rem;
+
+    /* Body Artist pastel palette */
+    --pastel-yellow: 48 100% 88%;
+    --pastel-pink: 340 80% 88%;
+    --pastel-lavender: 270 60% 90%;
+    --pastel-sage: 120 30% 85%;
+    --pastel-sky: 200 70% 88%;
+    --pastel-peach: 20 90% 90%;
+    --pastel-mint: 160 40% 88%;
+    --pastel-coral: 10 80% 88%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --font-heading: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .dark {
+    --background: 240 10% 6%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 10% 10%;
+    --secondary: 240 8% 16%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 240 8% 16%;
+    --muted-foreground: 240 5% 60%;
+    --accent: 240 8% 16%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 240 8% 18%;
+    --input: 240 8% 18%;
+    --ring: 0 0% 80%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+@layer components {
+  .pastel-card {
+    @apply rounded-3xl p-6 transition-all duration-300;
+  }
+  .pastel-yellow { background-color: hsl(var(--pastel-yellow)); }
+  .pastel-pink { background-color: hsl(var(--pastel-pink)); }
+  .pastel-lavender { background-color: hsl(var(--pastel-lavender)); }
+  .pastel-sage { background-color: hsl(var(--pastel-sage)); }
+  .pastel-sky { background-color: hsl(var(--pastel-sky)); }
+  .pastel-peach { background-color: hsl(var(--pastel-peach)); }
+  .pastel-mint { background-color: hsl(var(--pastel-mint)); }
+  .pastel-coral { background-color: hsl(var(--pastel-coral)); }
+
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl;
+  }
+
+  .nav-pill {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200;
+  }
+  .nav-pill-active {
+    @apply bg-primary text-primary-foreground;
+  }
+}
