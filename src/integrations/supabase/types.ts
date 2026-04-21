@@ -296,6 +296,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          coach_id: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -305,6 +306,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          coach_id?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -314,6 +316,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          coach_id?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -450,7 +453,61 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+        water_logs: {
+        Row: {
+          id: string
+          user_id: string
+          date: string
+          glasses: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          date?: string
+          glasses?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          date?: string
+          glasses?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
+      progress_photos: {
+        Row: {
+          id: string
+          athlete_id: string
+          image_url: string
+          notes: string | null
+          weight: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          athlete_id: string
+          image_url: string
+          notes?: string | null
+          weight?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          athlete_id?: string
+          image_url?: string
+          notes?: string | null
+          weight?: number | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+    }
     }
     Views: {
       [_ in never]: never
@@ -465,7 +522,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "trainer" | "athlete"
+      app_role: "admin" | "coach" | "trainer" | "athlete"
       meal_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -594,7 +651,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["trainer", "athlete"],
+      app_role: ["admin", "coach", "trainer", "athlete"],
       meal_status: ["pending", "approved", "rejected"],
     },
   },

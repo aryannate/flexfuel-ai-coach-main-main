@@ -19,17 +19,29 @@ export default function AthleteDashboard() {
   const { meals, notifications } = useAthleteMealSync();
   const [waterGlasses, setWaterGlasses] = useState(5);
 
-  // Calculate today's actual logged macros
+  // Calculate today's actual logged macros from 12 AM
   const todayMealUploads = meals.filter(m => {
-    const d = new Date(m.created_at).toDateString();
-    return d === new Date().toDateString();
+    const mealDate = new Date(m.created_at);
+    const today = new Date();
+    // Compare dates locally to check if it's "today"
+    return mealDate.getDate() === today.getDate() &&
+           mealDate.getMonth() === today.getMonth() &&
+           mealDate.getFullYear() === today.getFullYear() &&
+           m.status !== "rejected";
   });
 
+  const todayCalories = Math.round(todayMealUploads.reduce((acc, m) => acc + (m.analysis?.totals?.calories || 0), 0));
+  const todayProtein = Math.round(todayMealUploads.reduce((acc, m) => acc + (m.analysis?.totals?.protein || 0), 0));
+  const todayCarbs = Math.round(todayMealUploads.reduce((acc, m) => acc + (m.analysis?.totals?.carbs || 0), 0));
+  const todayFats = Math.round(todayMealUploads.reduce((acc, m) => acc + (m.analysis?.totals?.fats || 0), 0));
+
+  const targetPlanCal = plan?.total_calories || 0;
+
   const todayStats = [
-    { label: "Calories", value: plan ? `${plan.total_calories}` : "—", target: plan ? `${plan.total_calories}` : "—", pct: logs.length > 0 ? Math.round((logs.filter(l => l.status === "completed").length / (plan?.meals.length || 1)) * 100) : 0, icon: Flame, bg: "bg-pastel-yellow" },
-    { label: "Meals Logged", value: `${logs.length}`, target: `${plan?.meals.length || 0}`, pct: plan?.meals.length ? Math.round((logs.length / plan.meals.length) * 100) : 0, icon: Beef, bg: "bg-pastel-pink" },
-    { label: "Completed", value: `${logs.filter(l => l.status === "completed").length}`, target: `${plan?.meals.length || 0}`, pct: plan?.meals.length ? Math.round((logs.filter(l => l.status === "completed").length / plan.meals.length) * 100) : 0, icon: Wheat, bg: "bg-pastel-sky" },
-    { label: "Pending Review", value: `${meals.filter(m => m.status === "pending").length}`, target: "", pct: 0, icon: Droplets, bg: "bg-pastel-sage" },
+    { label: "Daily Calories", value: `${todayCalories}`, target: targetPlanCal ? `${targetPlanCal}` : "—", pct: targetPlanCal ? Math.round((todayCalories / targetPlanCal) * 100) : 0, icon: Flame, bg: "bg-pastel-yellow" },
+    { label: "Protein (g)", value: `${todayProtein}`, target: "", pct: 0, icon: Beef, bg: "bg-pastel-pink" },
+    { label: "Carbs (g)", value: `${todayCarbs}`, target: "", pct: 0, icon: Wheat, bg: "bg-pastel-sky" },
+    { label: "Fats (g)", value: `${todayFats}`, target: "", pct: 0, icon: Droplets, bg: "bg-pastel-sage" },
   ];
 
   return (

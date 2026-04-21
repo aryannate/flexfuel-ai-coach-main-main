@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { useAuth } from "@/lib/authContext";
 
 export interface MealUploadRow {
   id: string;
   athlete_id: string;
   image_url: string | null;
-  status: "pending" | "approved" | "rejected";
+  status: "logged" | "pending" | "approved" | "rejected";
   rejection_reason: string | null;
   meal_type: string | null;
   day: string | null;
@@ -51,16 +52,32 @@ export interface NotificationRow {
 
 // Hook for athlete: subscribe to own meal status changes & notifications
 export function useAthleteMealSync() {
-  const [meals, setMeals] = useState<MealUploadRow[]>([]);
+  const [meals, setMeals] = useState<(MealUploadRow & { analysis?: MealAnalysisRow })[]>([]);
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMeals = useCallback(async () => {
-    const { data, error } = await supabase
+    const { data: uploads, error } = await supabase
       .from("meal_uploads")
       .select("*")
       .order("created_at", { ascending: false });
-    if (!error && data) setMeals(data as MealUploadRow[]);
+
+    if (!error && uploads) {
+      const ids = uploads.map((u) => u.id);
+      const { data: analysisData } = await supabase
+        .from("meal_analysis_results")
+        .select("*")
+        .in("meal_upload_id", ids);
+
+      const analysisMap = new Map((analysisData || []).map(a => [a.meal_upload_id, a]));
+      
+      const enriched = uploads.map(u => ({
+        ...u,
+        analysis: analysisMap.get(u.id) as MealAnalysisRow | undefined
+      }));
+
+      setMeals(enriched as any);
+    }
     setLoading(false);
   }, []);
 
@@ -123,38 +140,75 @@ export function useAthleteMealSync() {
   return { meals, notifications, loading, refetchMeals: fetchMeals, markRead };
 }
 
-// Hook for trainer: view all meals, approve/reject, override
+// Hook for trainer: view meals from assigned athletes only
 export function useTrainerMealSync() {
-  const [meals, setMeals] = useState<(MealUploadRow & { analysis?: MealAnalysisRow; override?: TrainerOverrideRow })[]>([]);
+  const { user, role } = useAuth();
+  const [meals, setMeals] = useState<(MealUploadRow & { analysis?: MealAnalysisRow; athlete_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isAdmin = role === "admin";
+
   const fetchMeals = useCallback(async () => {
-    const { data: uploads } = await supabase
+    if (!user) return;
+
+    let athleteIds: string[] = [];
+
+    // Step 1: If coach/trainer, get ONLY assigned athletes
+    if (!isAdmin) {
+      const { data: myAthletes } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("trainer_id", user.id);
+      
+      athleteIds = myAthletes?.map((a) => a.user_id) || [];
+      
+      // If we have no athletes assigned, we can't see any meals
+      if (athleteIds.length === 0) {
+        setMeals([]);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Step 2: Fetch meals
+    let query = supabase
       .from("meal_uploads")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!uploads) { setLoading(false); return; }
+    // Step 3: Enforce scoping on frontend (RLS enforces on backend)
+    if (!isAdmin) {
+      query = query.in("athlete_id", athleteIds);
+    }
+
+    const { data: uploads } = await query;
+
+    if (!uploads || uploads.length === 0) {
+      setMeals([]);
+      setLoading(false);
+      return;
+    }
 
     const ids = uploads.map((u) => u.id);
+    const uids = [...new Set(uploads.map((u) => u.athlete_id))];
 
-    const [analysisRes, overrideRes] = await Promise.all([
+    const [analysisRes, profilesRes] = await Promise.all([
       supabase.from("meal_analysis_results").select("*").in("meal_upload_id", ids),
-      supabase.from("trainer_overrides").select("*").in("meal_upload_id", ids),
+      supabase.from("profiles").select("user_id, display_name").in("user_id", uids),
     ]);
 
     const analysisMap = new Map((analysisRes.data ?? []).map((a) => [a.meal_upload_id, a]));
-    const overrideMap = new Map((overrideRes.data ?? []).map((o) => [o.meal_upload_id, o]));
+    const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.user_id, p.display_name]));
 
     const enriched = uploads.map((u) => ({
       ...u,
       analysis: analysisMap.get(u.id) as MealAnalysisRow | undefined,
-      override: overrideMap.get(u.id) as TrainerOverrideRow | undefined,
+      athlete_name: profileMap.get(u.athlete_id) || "Unknown Athlete",
     }));
 
     setMeals(enriched as any);
     setLoading(false);
-  }, []);
+  }, [user, isAdmin]);
 
   useEffect(() => {
     fetchMeals();
@@ -165,7 +219,7 @@ export function useTrainerMealSync() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "meal_uploads" },
         () => {
-          toast.info("New meal uploaded by an athlete!");
+          toast.info("🍽️ An athlete just logged a meal!");
           fetchMeals();
         }
       )
@@ -174,75 +228,5 @@ export function useTrainerMealSync() {
     return () => { supabase.removeChannel(channel); };
   }, [fetchMeals]);
 
-  const approveMeal = useCallback(async (mealId: string, athleteId: string) => {
-    const { error } = await supabase
-      .from("meal_uploads")
-      .update({ status: "approved" as any })
-      .eq("id", mealId);
-    if (error) { toast.error("Failed to approve"); return; }
-
-    await supabase.from("notifications").insert({
-      user_id: athleteId,
-      type: "meal_approved",
-      title: "Meal Approved ✅",
-      message: "Coach Sachin approved your meal log.",
-      meal_upload_id: mealId,
-    } as any);
-
-    toast.success("Meal approved");
-    fetchMeals();
-  }, [fetchMeals]);
-
-  const rejectMeal = useCallback(async (mealId: string, athleteId: string, reason: string) => {
-    const { error } = await supabase
-      .from("meal_uploads")
-      .update({ status: "rejected" as any, rejection_reason: reason })
-      .eq("id", mealId);
-    if (error) { toast.error("Failed to reject"); return; }
-
-    await supabase.from("notifications").insert({
-      user_id: athleteId,
-      type: "meal_rejected",
-      title: "Meal Rejected ❌",
-      message: reason || "Please review trainer notes.",
-      meal_upload_id: mealId,
-    } as any);
-
-    toast.success("Meal rejected with feedback");
-    fetchMeals();
-  }, [fetchMeals]);
-
-  const saveOverride = useCallback(async (
-    mealId: string,
-    trainerId: string,
-    nutrientNotes: Record<string, string>,
-    editedFoods?: any,
-    editedTotals?: any
-  ) => {
-    // Upsert override
-    const existing = meals.find((m) => m.id === mealId)?.override;
-    if (existing) {
-      await supabase
-        .from("trainer_overrides")
-        .update({
-          nutrient_notes: nutrientNotes as any,
-          ...(editedFoods ? { edited_foods: editedFoods } : {}),
-          ...(editedTotals ? { edited_totals: editedTotals } : {}),
-        })
-        .eq("id", existing.id);
-    } else {
-      await supabase.from("trainer_overrides").insert({
-        meal_upload_id: mealId,
-        trainer_id: trainerId,
-        nutrient_notes: nutrientNotes as any,
-        ...(editedFoods ? { edited_foods: editedFoods } : {}),
-        ...(editedTotals ? { edited_totals: editedTotals } : {}),
-      } as any);
-    }
-
-    toast.success("Trainer notes saved");
-    fetchMeals();
-  }, [fetchMeals, meals]);
-
-  return { meals, loading, approveMeal, rejectMeal, saveOverride, refetch: fetchMeals };
+  return { meals, loading, refetch: fetchMeals };
 }

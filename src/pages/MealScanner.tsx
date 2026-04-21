@@ -68,7 +68,7 @@ export default function MealScanner() {
           image_url: imageUrl,
           meal_type: result.mealType,
           day: new Date().toLocaleDateString("en-US", { weekday: "long" }),
-          status: "pending" as any,
+          status: "logged" as any,
         })
         .select()
         .single();
@@ -88,7 +88,7 @@ export default function MealScanner() {
         // Log the meal
         await logMeal(null, upload.id, "completed");
 
-        toast.success("Meal logged and sent to Coach for review! 🎯");
+        toast.success("Meal logged successfully! 🎯");
         reset();
       }
     } catch (err) {

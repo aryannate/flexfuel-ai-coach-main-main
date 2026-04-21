@@ -3,21 +3,24 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/authContext";
 import {
   LayoutDashboard, Users, UtensilsCrossed, MessageSquare, BarChart3,
-  Camera, Settings, LogOut, Zap, CalendarDays, Activity, Droplets
+  Camera, Settings, LogOut, Zap, CalendarDays, Activity, Droplets, ClipboardList
 } from "lucide-react";
 
-const trainerLinks = [
-  { to: "/trainer", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/trainer/athletes", icon: Users, label: "Athletes" },
-  { to: "/trainer/diet-planner", icon: UtensilsCrossed, label: "Diet Planner" },
-  { to: "/trainer/chat", icon: MessageSquare, label: "Chat" },
-  { to: "/trainer/analytics", icon: BarChart3, label: "Analytics" },
-  { to: "/trainer/settings", icon: Settings, label: "Settings" },
+const coachLinks = [
+  { to: "/coach", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/coach/scan", icon: Camera, label: "Meal Scanner" },
+  { to: "/coach/tracker", icon: ClipboardList, label: "Daily Tracker" },
+  { to: "/coach/athletes", icon: Users, label: "Athletes" },
+  { to: "/coach/diet-planner", icon: UtensilsCrossed, label: "Diet Planner" },
+  { to: "/coach/chat", icon: MessageSquare, label: "Chat" },
+  { to: "/coach/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/coach/settings", icon: Settings, label: "Settings" },
 ];
 
 const athleteLinks = [
   { to: "/athlete", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/athlete/scan", icon: Camera, label: "Meal Scanner" },
+  { to: "/athlete/tracker", icon: ClipboardList, label: "Daily Tracker" },
   { to: "/athlete/diet", icon: UtensilsCrossed, label: "My Diet" },
   { to: "/athlete/progress", icon: Activity, label: "Progress" },
   { to: "/athlete/chat", icon: MessageSquare, label: "Chat" },
@@ -30,9 +33,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, logout, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const links = role === "trainer" ? trainerLinks : athleteLinks;
 
-  const handleLogout = () => { logout(); navigate("/"); };
+  const links = role === "athlete" ? athleteLinks : coachLinks;
+
+  const handleLogout = () => { logout(); navigate("/login"); };
+
+  const roleLabel = role === "admin" ? "Admin" : role === "coach" ? "Coach" : role === "trainer" ? "Trainer" : "Athlete";
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -70,7 +76,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+              <p className="text-xs text-muted-foreground">{roleLabel}</p>
             </div>
           </div>
           <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all w-full">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
+import PoseUploader from "@/components/PoseUploader";
 
 const weightData = [
   { week: "W1", weight: 220 },
@@ -108,19 +109,8 @@ export default function Progress() {
           </div>
         </div>
 
-        {/* Check-in Photos */}
-        <div className="bg-pastel-lavender pastel-card">
-          <h3 className="font-bold font-heading mb-4 flex items-center gap-2"><Camera className="w-5 h-5" /> Check-in Photos</h3>
-          <div className="grid grid-cols-3 gap-4">
-            {["Front", "Side", "Back"].map((pose) => (
-              <div key={pose} className="bg-card rounded-2xl p-8 text-center border border-border">
-                <Camera className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">{pose} Pose</p>
-                <Button variant="outline" size="sm" className="rounded-xl mt-3 text-xs">Upload</Button>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Pose Uploader component */}
+        <PoseUploader />
       </div>
     </DashboardLayout>
   );

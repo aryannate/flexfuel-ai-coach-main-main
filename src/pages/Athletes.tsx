@@ -1,43 +1,74 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { mockAthletes } from "@/lib/mockData";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, X } from "lucide-react";
-import { toast } from "sonner";
+import { UserPlus, Search, Activity} from "lucide-react";
+import { useAuth } from "@/lib/authContext";
+import { supabase } from "@/integrations/supabase/client";
+import AddUserModal from "@/components/AddUserModal";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+
+interface AthleteRow {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  trainer_id: string | null;
+  created_at: string;
+}
 
 export default function Athletes() {
-  const [athletes, setAthletes] = useState(mockAthletes);
+  const { user, role } = useAuth();
+  const [athletes, setAthletes] = useState<AthleteRow[]>([]);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newGoal, setNewGoal] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const filtered = athletes.filter((a) => a.name.toLowerCase().includes(search.toLowerCase()));
+  const isCoach = role === "admin" || role === "coach";
 
-  const addAthlete = () => {
-    if (!newName) return;
-    setAthletes([
-      ...athletes,
-      {
-        id: String(athletes.length + 1),
-        name: newName,
-        avatar: newName.split(" ").map((n) => n[0]).join("").slice(0, 2),
-        goal: newGoal || "General",
-        weight: 180,
-        compliance: 0,
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fats: 0,
-        status: "needs-attention" as const,
-      },
-    ]);
-    setNewName("");
-    setNewGoal("");
-    setShowAdd(false);
-    toast.success("Athlete added!");
+  const loadAthletes = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    // Direct athletes
+    const { data: direct } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_url, trainer_id, created_at")
+      .eq("trainer_id", user.id);
+
+    let all = direct || [];
+
+    // If coach/admin, also get athletes from trainers
+    if (isCoach) {
+      const { data: trainers } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("coach_id", user.id);
+
+      if (trainers && trainers.length > 0) {
+        const trainerIds = trainers.map(t => t.user_id);
+        const { data: indirectAthletes } = await supabase
+          .from("profiles")
+          .select("user_id, display_name, avatar_url, trainer_id, created_at")
+          .in("trainer_id", trainerIds);
+
+        if (indirectAthletes) {
+          const existing = new Set(all.map(a => a.user_id));
+          const newOnes = indirectAthletes.filter(a => !existing.has(a.user_id));
+          all = [...all, ...newOnes];
+        }
+      }
+    }
+
+    setAthletes(all);
+    setLoading(false);
   };
+
+  useEffect(() => { loadAthletes(); }, [user]);
+
+  const filtered = athletes.filter((a) =>
+    (a.display_name || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <DashboardLayout>
@@ -45,7 +76,7 @@ export default function Athletes() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold font-heading">Athletes</h1>
           <Button onClick={() => setShowAdd(true)} className="rounded-full gap-2">
-            <Plus className="w-4 h-4" /> Add Athlete
+            <UserPlus className="w-4 h-4" /> Add Athlete
           </Button>
         </div>
 
@@ -54,33 +85,55 @@ export default function Athletes() {
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search athletes..." className="h-12 rounded-2xl pl-10" />
         </div>
 
-        {showAdd && (
-          <div className="bg-pastel-sky pastel-card flex flex-col md:flex-row gap-3">
-            <Input placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} className="rounded-xl flex-1" />
-            <Input placeholder="Goal" value={newGoal} onChange={(e) => setNewGoal(e.target.value)} className="rounded-xl flex-1" />
-            <Button onClick={addAthlete} className="rounded-xl">Add</Button>
-            <Button variant="ghost" onClick={() => setShowAdd(false)} className="rounded-xl"><X className="w-4 h-4" /></Button>
+        {loading ? (
+          <div className="text-center py-12 text-muted-foreground">Loading athletes...</div>
+        ) : filtered.length === 0 ? (
+          <div className="bg-card rounded-3xl p-12 border border-border text-center">
+            <p className="font-bold font-heading text-lg mb-2">No athletes found</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              {search ? "Try a different search" : "Create athlete accounts to get started"}
+            </p>
+            {!search && (
+              <Button onClick={() => setShowAdd(true)} className="rounded-full gap-2">
+                <UserPlus className="w-4 h-4" /> Add Athlete
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((a, i) => {
+              const avatar = (a.display_name || "A").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+              return (
+                <Link key={a.user_id} to={`/coach/athlete/${a.user_id}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="bg-card rounded-3xl p-5 border border-border flex items-center gap-4 hover:shadow-lg transition-all cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-pastel-lavender flex items-center justify-center font-bold text-sm flex-shrink-0">
+                      {avatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold">{a.display_name || "Athlete"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Joined {new Date(a.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Activity className="w-5 h-5 text-muted-foreground" />
+                  </motion.div>
+                </Link>
+              );
+            })}
           </div>
         )}
 
-        <div className="space-y-3">
-          {filtered.map((a) => (
-            <div key={a.id} className="bg-card rounded-3xl p-5 border border-border flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-pastel-lavender flex items-center justify-center font-bold text-sm flex-shrink-0">{a.avatar}</div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold">{a.name}</p>
-                <p className="text-sm text-muted-foreground">{a.goal} · {a.weight} lbs</p>
-              </div>
-              <span className={`text-xs px-3 py-1 rounded-full ${
-                a.status === "on-track" ? "bg-pastel-sage" : a.status === "needs-attention" ? "bg-pastel-yellow" : "bg-pastel-coral"
-              }`}>{a.status.replace("-", " ")}</span>
-              <div className="text-right hidden md:block">
-                <p className="font-bold text-sm">{a.compliance}%</p>
-                <p className="text-xs text-muted-foreground">compliance</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <AddUserModal
+          open={showAdd}
+          onClose={() => setShowAdd(false)}
+          onCreated={() => loadAthletes()}
+          accountType="athlete"
+        />
       </div>
     </DashboardLayout>
   );
