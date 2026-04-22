@@ -34,7 +34,23 @@ CREATE POLICY "Athletes can view their own meal analysis" ON meal_analysis_resul
     )
   );
 
--- 3. CREATE DAILY LOGS TABLE (For permantent archiving)
+-- 3. FIX COACH CREATION BECOMING ATHLETES (Allow admins/coaches to insert roles & profiles)
+DROP POLICY IF EXISTS "Admins can insert roles" ON user_roles;
+CREATE POLICY "Admins can insert roles" ON user_roles FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = auth.uid() AND ur.role IN ('admin', 'coach', 'trainer'))
+);
+
+DROP POLICY IF EXISTS "Users can read their own role" ON user_roles;
+CREATE POLICY "Users can read their own role" ON user_roles FOR SELECT USING (auth.uid() = user_id);
+
+-- Also ensure profiles allows insertion from admins/coaches
+DROP POLICY IF EXISTS "Admins can insert profiles" ON profiles;
+CREATE POLICY "Admins can insert profiles" ON profiles FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = auth.uid() AND ur.role IN ('admin', 'coach', 'trainer'))
+);
+
+
+-- 4. CREATE DAILY LOGS TABLE (For permantent archiving)
 CREATE TABLE IF NOT EXISTS public.daily_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     athlete_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -51,13 +67,16 @@ CREATE TABLE IF NOT EXISTS public.daily_logs (
 -- RLS for Daily Logs
 ALTER TABLE public.daily_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Athletes can view their own logs" ON daily_logs;
 CREATE POLICY "Athletes can view their own logs" ON daily_logs FOR SELECT USING (athlete_id = auth.uid());
+
+DROP POLICY IF EXISTS "Trainers can view assigned athlete logs" ON daily_logs;
 CREATE POLICY "Trainers can view assigned athlete logs" ON daily_logs FOR SELECT USING (
   EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = daily_logs.athlete_id AND profiles.trainer_id = auth.uid())
 );
 
 
--- 4. PG_CRON FUNCTION (2 AM Daily Summary Logging)
+-- 5. PG_CRON FUNCTION (2 AM Daily Summary Logging)
 CREATE OR REPLACE FUNCTION generate_daily_summaries() RETURNS void AS $$
 DECLARE
     target_date DATE := (CURRENT_DATE - INTERVAL '1 day')::DATE;
@@ -86,10 +105,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5. SCHEDULE THE CRON JOB 
--- Need to run as superuser postgres, so we use pg_cron (ensure the extension is enabled)
+-- 6. SCHEDULE THE CRON JOB 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
-
--- Schedule it to run at 2:00 AM every day
--- Note: Supabase free tier requires the pg_cron extension, otherwise use standard cron if available.
 SELECT cron.schedule('generate_daily_summaries_job', '0 2 * * *', $$SELECT generate_daily_summaries();$$);

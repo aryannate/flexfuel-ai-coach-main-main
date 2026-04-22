@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/authContext";
 import {
   LayoutDashboard, Users, UtensilsCrossed, MessageSquare, BarChart3,
-  Camera, Settings, LogOut, Zap, CalendarDays, Activity, Droplets, ClipboardList
+  Camera, Settings, LogOut, Zap, CalendarDays, Activity, Droplets, ClipboardList, Crown
 } from "lucide-react";
 
 const coachLinks = [
@@ -34,7 +34,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const links = role === "athlete" ? athleteLinks : coachLinks;
+  let links = role === "athlete" ? athleteLinks : [...coachLinks];
+
+  if (role === "admin" || role === "coach") {
+    // Insert Coaches right after Athletes
+    links.splice(4, 0, { to: "/coach", icon: Crown, label: "Coaches" } as any);
+  }
 
   const handleLogout = () => { logout(); navigate("/login"); };
 
