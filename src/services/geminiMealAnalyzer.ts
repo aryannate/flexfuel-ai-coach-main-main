@@ -155,10 +155,18 @@ export async function analyzeMealImage(imageFile: File): Promise<MealAnalysisRes
     const errText = await response.text();
     console.error("Gemini API error:", response.status, errText);
 
+    let errorDetail = `Gemini API error: ${response.status}`;
+    try {
+      const errJson = JSON.parse(errText);
+      if (errJson?.error?.message) {
+        errorDetail = errJson.error.message;
+      }
+    } catch { /* use default message */ }
+
     if (response.status === 429) {
       throw new Error("Rate limit exceeded. Please try again in a moment.");
     }
-    throw new Error(`Gemini API error: ${response.status}`);
+    throw new Error(errorDetail);
   }
 
   const data = await response.json();
