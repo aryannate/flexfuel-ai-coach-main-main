@@ -21,8 +21,19 @@ export default function Pricing() {
             </div>
             <span className="text-xl font-bold font-heading">Body Artist</span>
           </Link>
-          <Link to="/signup"><Button className="rounded-full px-6">Get Started</Button></Link>
-        </div>
+          <div className="hidden md:flex items-center gap-8">
+            <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">Pricing</Link>
+            <Link to="/login" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">Login</Link>
+            <Link to="/login">
+              <Button className="rounded-full px-6">Get Started</Button>
+            </Link>
+          </div>
+          <div className="md:hidden flex items-center gap-4">
+            <Link to="/login" className="text-sm font-medium text-muted-foreground">Login</Link>
+            <Link to="/login">
+              <Button size="sm" className="rounded-full">Start Free</Button>
+            </Link>
+          </div>
       </nav>
 
       <section className="max-w-7xl mx-auto px-6 py-20">
@@ -59,7 +70,7 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/signup" className="mt-8">
+              <Link to="/login" className="mt-8">
                 <Button className={`w-full rounded-full h-12 ${plan.popular ? "" : "variant-outline"}`} variant={plan.popular ? "default" : "outline"}>
                   Get Started
                 </Button>

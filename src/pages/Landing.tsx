@@ -29,13 +29,16 @@ export default function Landing() {
           <div className="hidden md:flex items-center gap-8">
             <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">Pricing</Link>
             <Link to="/login" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">Login</Link>
-            <Link to="/signup">
+            <Link to="/login">
               <Button className="rounded-full px-6">Get Started</Button>
             </Link>
           </div>
-          <Link to="/signup" className="md:hidden">
-            <Button size="sm" className="rounded-full">Start Free</Button>
-          </Link>
+          <div className="md:hidden flex items-center gap-4">
+            <Link to="/login" className="text-sm font-medium text-muted-foreground">Login</Link>
+            <Link to="/login">
+              <Button size="sm" className="rounded-full">Start Free</Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -62,7 +65,7 @@ export default function Landing() {
             The ultimate AI nutrition coaching platform for professional bodybuilders. Scan meals, track macros, and optimize every bite for peak performance.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/signup">
+            <Link to="/login">
               <Button size="lg" className="rounded-full px-8 text-base h-14 gap-2">
                 Start Free Trial <ArrowRight className="w-5 h-5" />
               </Button>
@@ -136,7 +139,7 @@ export default function Landing() {
           <p className="text-primary-foreground/70 text-lg mb-10 max-w-xl mx-auto">
             Join elite trainers using AI to optimize every meal for their athletes.
           </p>
-          <Link to="/signup">
+          <Link to="/login">
             <Button variant="secondary" size="lg" className="rounded-full px-10 text-base h-14 gap-2">
               Get Started Free <ArrowRight className="w-5 h-5" />
             </Button>

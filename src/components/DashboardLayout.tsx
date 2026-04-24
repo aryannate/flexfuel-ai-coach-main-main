@@ -100,8 +100,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
             <span className="font-bold font-heading">Body Artist</span>
           </Link>
-          <div className="w-8 h-8 rounded-full bg-pastel-lavender flex items-center justify-center text-xs font-bold">
-            {user?.avatar}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-pastel-lavender flex items-center justify-center text-xs font-bold">
+              {user?.avatar}
+            </div>
+            <button onClick={handleLogout} className="p-2 text-muted-foreground hover:text-foreground">
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </header>
 
