@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/authContext";
 import {
   LayoutDashboard, Users, UtensilsCrossed, MessageSquare, BarChart3,
-  Camera, Settings, LogOut, Zap, CalendarDays, Activity, Droplets, ClipboardList, Crown
+  Camera, Settings, LogOut, Zap, CalendarDays, Activity, Droplets, ClipboardList
 } from "lucide-react";
 
 const coachLinks = [
@@ -14,6 +14,15 @@ const coachLinks = [
   { to: "/coach/diet-planner", icon: UtensilsCrossed, label: "Diet Planner" },
   { to: "/coach/chat", icon: MessageSquare, label: "Chat" },
   { to: "/coach/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/coach/settings", icon: Settings, label: "Settings" },
+];
+
+const trainerLinks = [
+  { to: "/trainer", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/coach/scan", icon: Camera, label: "Meal Scanner" },
+  { to: "/coach/tracker", icon: ClipboardList, label: "Daily Tracker" },
+  { to: "/coach/athletes", icon: Users, label: "Athletes" },
+  { to: "/coach/chat", icon: MessageSquare, label: "Chat" },
   { to: "/coach/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -34,12 +43,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  let links = role === "athlete" ? athleteLinks : [...coachLinks];
-
-  if (role === "admin" || role === "coach") {
-    // Insert Coaches right after Athletes
-    links.splice(4, 0, { to: "/coach", icon: Crown, label: "Coaches" } as any);
-  }
+  const links = role === "athlete" ? athleteLinks : role === "trainer" ? trainerLinks : coachLinks;
 
   const handleLogout = () => { logout(); navigate("/login"); };
 

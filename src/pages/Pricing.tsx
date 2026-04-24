@@ -28,10 +28,12 @@ export default function Pricing() {
               <Button className="rounded-full px-6">Get Started</Button>
             </Link>
           </div>
-          <div className="md:hidden flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-muted-foreground">Login</Link>
+          <div className="md:hidden flex items-center gap-3">
             <Link to="/login">
-              <Button size="sm" className="rounded-full">Start Free</Button>
+              <Button variant="outline" size="sm" className="rounded-full px-4">Login</Button>
+            </Link>
+            <Link to="/login">
+              <Button size="sm" className="rounded-full px-4">Start Free</Button>
             </Link>
           </div>
         </div>
@@ -43,14 +45,14 @@ export default function Pricing() {
           <p className="text-lg text-muted-foreground">Choose the plan that fits your coaching practice</p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
           {pricingPlans.map((plan, i) => (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.15 }}
-              className={`${colorMap[plan.color]} pastel-card relative flex flex-col ${plan.popular ? "ring-2 ring-foreground scale-105" : ""}`}
+              className={`${colorMap[plan.color]} pastel-card relative flex flex-col ${plan.popular ? "ring-2 ring-foreground md:scale-105" : ""}`}
             >
               {plan.popular && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
@@ -72,8 +74,8 @@ export default function Pricing() {
                 ))}
               </ul>
               <Link to="/login" className="mt-8">
-                <Button className={`w-full rounded-full h-12 ${plan.popular ? "" : "variant-outline"}`} variant={plan.popular ? "default" : "outline"}>
-                  Get Started
+                <Button className="w-full rounded-full h-12" variant={plan.popular ? "default" : "outline"}>
+                  Get Started — Sign In
                 </Button>
               </Link>
             </motion.div>

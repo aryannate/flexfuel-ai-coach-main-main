@@ -47,13 +47,13 @@ export default function AthleteDashboard() {
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold font-heading">Hello, {user?.name || "Athlete"}!</h1>
-            <p className="text-muted-foreground mt-1">{plan?.name || "No plan assigned yet"}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold font-heading">Hello, {user?.name || "Athlete"}!</h1>
+            <p className="text-muted-foreground mt-1 text-sm">{plan?.name || "No plan assigned yet"}</p>
           </div>
-          <Link to="/athlete/scan">
-            <Button className="rounded-full gap-2 h-12 px-6">
+          <Link to="/athlete/scan" className="self-start sm:self-auto">
+            <Button className="rounded-full gap-2 h-11 px-5">
               <Camera className="w-5 h-5" /> Scan Meal
             </Button>
           </Link>

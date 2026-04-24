@@ -33,22 +33,24 @@ export default function Landing() {
               <Button className="rounded-full px-6">Get Started</Button>
             </Link>
           </div>
-          <div className="md:hidden flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-muted-foreground">Login</Link>
+          <div className="md:hidden flex items-center gap-3">
             <Link to="/login">
-              <Button size="sm" className="rounded-full">Start Free</Button>
+              <Button variant="outline" size="sm" className="rounded-full px-4">Login</Button>
+            </Link>
+            <Link to="/login">
+              <Button size="sm" className="rounded-full px-4">Start Free</Button>
             </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-6 pt-20 pb-32">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-16 sm:pb-32">
         <motion.div initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.6 }} className="text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pastel-yellow text-sm font-medium mb-8">
             <Zap className="w-4 h-4" /> AI-Powered Nutrition for Elite Athletes
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold font-heading leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold font-heading leading-tight mb-6">
             Fuel Your
             <span className="relative inline-block mx-3">
               <span className="relative z-10">Gains</span>
@@ -64,14 +66,14 @@ export default function Landing() {
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
             The ultimate AI nutrition coaching platform for professional bodybuilders. Scan meals, track macros, and optimize every bite for peak performance.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/login">
-              <Button size="lg" className="rounded-full px-8 text-base h-14 gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-xs sm:max-w-none mx-auto">
+            <Link to="/login" className="w-full sm:w-auto">
+              <Button size="lg" className="rounded-full px-8 text-base h-12 sm:h-14 gap-2 w-full sm:w-auto">
                 Start Free Trial <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
-            <Link to="/pricing">
-              <Button variant="outline" size="lg" className="rounded-full px-8 text-base h-14">
+            <Link to="/pricing" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="rounded-full px-8 text-base h-12 sm:h-14 w-full sm:w-auto">
                 View Pricing
               </Button>
             </Link>
@@ -133,8 +135,8 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-6 pb-32">
-        <div className="bg-primary text-primary-foreground rounded-4xl p-12 md:p-20 text-center">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 sm:pb-32">
+        <div className="bg-primary text-primary-foreground rounded-3xl sm:rounded-4xl p-8 sm:p-12 md:p-20 text-center">
           <h2 className="text-3xl md:text-5xl font-bold font-heading mb-6">Ready to Transform Your Coaching?</h2>
           <p className="text-primary-foreground/70 text-lg mb-10 max-w-xl mx-auto">
             Join elite trainers using AI to optimize every meal for their athletes.

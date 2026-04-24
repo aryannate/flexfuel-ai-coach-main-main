@@ -21,31 +21,30 @@ import Schedule from "./pages/Schedule";
 import AthleteDiet from "./pages/AthleteDiet";
 import DailyTracker from "./pages/DailyTracker";
 import AthleteDetail from "./pages/AthleteDetail";
+import TrainerDashboard from "./pages/TrainerDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-12 h-12 rounded-full border-4 border-foreground/20 border-t-foreground animate-spin" />
+  </div>
+);
 
 // Protected route: redirects to login if not authenticated
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { isAuthenticated, loading, role } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-12 h-12 rounded-full border-4 border-foreground/20 border-t-foreground animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return <LoadingSpinner />;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Redirect to their correct dashboard
-    if (role === "admin" || role === "coach" || role === "trainer") {
-      return <Navigate to="/coach" replace />;
-    }
+    if (role === "admin" || role === "coach") return <Navigate to="/coach" replace />;
+    if (role === "trainer") return <Navigate to="/trainer" replace />;
     return <Navigate to="/athlete" replace />;
   }
 
@@ -56,19 +55,12 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 function HomeRedirect() {
   const { isAuthenticated, loading, role } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-12 h-12 rounded-full border-4 border-foreground/20 border-t-foreground animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return <LoadingSpinner />;
 
   if (!isAuthenticated) return <Landing />;
 
-  if (role === "admin" || role === "coach" || role === "trainer") {
-    return <Navigate to="/coach" replace />;
-  }
+  if (role === "admin" || role === "coach") return <Navigate to="/coach" replace />;
+  if (role === "trainer") return <Navigate to="/trainer" replace />;
   return <Navigate to="/athlete" replace />;
 }
 
@@ -85,8 +77,11 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/login" element={<Login />} />
 
-            {/* Coach/Trainer/Admin routes */}
-            <Route path="/coach" element={<ProtectedRoute allowedRoles={["admin", "coach", "trainer"]}><CoachDashboard /></ProtectedRoute>} />
+            {/* Trainer routes */}
+            <Route path="/trainer" element={<ProtectedRoute allowedRoles={["trainer"]}><TrainerDashboard /></ProtectedRoute>} />
+
+            {/* Coach/Admin routes */}
+            <Route path="/coach" element={<ProtectedRoute allowedRoles={["admin", "coach"]}><CoachDashboard /></ProtectedRoute>} />
             <Route path="/coach/athletes" element={<ProtectedRoute allowedRoles={["admin", "coach", "trainer"]}><Athletes /></ProtectedRoute>} />
             <Route path="/coach/athlete/:athleteId" element={<ProtectedRoute allowedRoles={["admin", "coach", "trainer"]}><AthleteDetail /></ProtectedRoute>} />
             <Route path="/coach/diet-planner" element={<ProtectedRoute allowedRoles={["admin", "coach", "trainer"]}><DietPlanner /></ProtectedRoute>} />
