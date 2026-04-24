@@ -2,12 +2,17 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Search, Activity} from "lucide-react";
+import { UserPlus, Search, Activity } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { supabase } from "@/integrations/supabase/client";
 import AddUserModal from "@/components/AddUserModal";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { demoAthletes } from "@/lib/demoData";
+
+const avatarColors = ["bg-pastel-pink", "bg-pastel-lavender", "bg-pastel-sky", "bg-pastel-peach", "bg-pastel-sage", "bg-pastel-yellow"];
+const demoGoals = ["Competition Prep · 14 weeks out", "Off-Season Bulk · On track", "Post-Show Reverse Diet"];
+const demoCompliances = ["97% compliance · 38 meals logged", "83% compliance · 24 meals logged", "71% compliance · 19 meals logged"];
 
 interface AthleteRow {
   user_id: string;
@@ -19,7 +24,7 @@ interface AthleteRow {
 
 export default function Athletes() {
   const { user, role } = useAuth();
-  const [athletes, setAthletes] = useState<AthleteRow[]>([]);
+  const [realAthletes, setRealAthletes] = useState<AthleteRow[]>([]);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -30,7 +35,6 @@ export default function Athletes() {
     if (!user) return;
     setLoading(true);
 
-    // Direct athletes
     const { data: direct } = await supabase
       .from("profiles")
       .select("user_id, display_name, avatar_url, trainer_id, created_at")
@@ -38,7 +42,6 @@ export default function Athletes() {
 
     let all = direct || [];
 
-    // If coach/admin, also get athletes from trainers
     if (isCoach) {
       const { data: trainers } = await supabase
         .from("profiles")
@@ -60,22 +63,30 @@ export default function Athletes() {
       }
     }
 
-    setAthletes(all);
+    setRealAthletes(all);
     setLoading(false);
   };
 
   useEffect(() => { loadAthletes(); }, [user]);
 
+  // Use demo athletes when Supabase has none
+  const athletes = realAthletes.length > 0 ? realAthletes : demoAthletes as AthleteRow[];
+
   const filtered = athletes.filter((a) =>
     (a.display_name || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const isDemo = realAthletes.length === 0;
+
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold font-heading">Athletes</h1>
-          <Button onClick={() => setShowAdd(true)} className="rounded-full gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold font-heading">Athletes</h1>
+            <p className="text-sm text-muted-foreground mt-1">{athletes.length} active athletes on your roster</p>
+          </div>
+          <Button onClick={() => setShowAdd(true)} className="rounded-full gap-2 self-start sm:self-auto">
             <UserPlus className="w-4 h-4" /> Add Athlete
           </Button>
         </div>
@@ -102,25 +113,32 @@ export default function Athletes() {
         ) : (
           <div className="space-y-3">
             {filtered.map((a, i) => {
-              const avatar = (a.display_name || "A").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+              const name = a.display_name || "Athlete";
+              const avatar = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+              const goal = isDemo ? demoGoals[i] : undefined;
+              const compliance = isDemo ? demoCompliances[i] : undefined;
               return (
                 <Link key={a.user_id} to={`/coach/athlete/${a.user_id}`}>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
+                    transition={{ delay: i * 0.05 }}
                     className="bg-card rounded-3xl p-5 border border-border flex items-center gap-4 hover:shadow-lg transition-all cursor-pointer"
                   >
-                    <div className="w-12 h-12 rounded-full bg-pastel-lavender flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    <div className={`w-12 h-12 rounded-full ${avatarColors[i % avatarColors.length]} flex items-center justify-center font-bold text-sm flex-shrink-0`}>
                       {avatar}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold">{a.display_name || "Athlete"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Joined {new Date(a.created_at).toLocaleDateString()}
-                      </p>
+                      <p className="font-bold">{name}</p>
+                      {goal && <p className="text-xs text-muted-foreground mt-0.5">{goal}</p>}
+                      {compliance && <p className="text-xs font-medium text-foreground/60 mt-0.5">{compliance}</p>}
+                      {!goal && (
+                        <p className="text-sm text-muted-foreground">
+                          Joined {new Date(a.created_at).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
-                    <Activity className="w-5 h-5 text-muted-foreground" />
+                    <Activity className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                   </motion.div>
                 </Link>
               );
