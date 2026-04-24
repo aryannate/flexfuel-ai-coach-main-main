@@ -34,6 +34,7 @@ export default function Pricing() {
               <Button size="sm" className="rounded-full">Start Free</Button>
             </Link>
           </div>
+        </div>
       </nav>
 
       <section className="max-w-7xl mx-auto px-6 py-20">
